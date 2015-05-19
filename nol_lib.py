@@ -81,7 +81,7 @@ class NolCrawler:
         status = curl.getinfo(curl.RESPONSE_CODE)
         if status != expected_status:
             raise Exception(
-                'NOL HTTP status {} (not {})'.format(status, expected_status))
+                'HTTP status {} (not {})'.format(status, expected_status))
 
     @staticmethod
     def static_request(user_args):
@@ -189,16 +189,23 @@ class NolCrawler:
                     ceiba_link = ceiba_link.replace('http', 'https', 1)
                 headers = BytesIO()
                 self.curl.setopt(self.curl.HEADERFUNCTION, headers.write)
-                NolCrawler.request(self.curl, BytesIO(),
-                    url_override=ceiba_link, expected_status=302)
-                location = get_http_header(headers.getvalue(), b'Location')
-                if location.startswith('https://ceiba.ntu.edu.tw/login_test.php'):
-                    course['PRIVATE____ceiba'] = parse_qs(
-                        urlparse(location).query)['csn'][0]
-                elif location.startswith('https://ceiba.ntu.edu.tw/course/'):
-                    course['PRIVATE____ceiba'] = location.split('/')[4]
+                try:
+                    NolCrawler.request(self.curl, BytesIO(),
+                        url_override=ceiba_link, expected_status=302)
+                except Exception as e:
+                    if self.curl.getinfo(self.curl.RESPONSE_CODE) == 404:
+                        course['PRIVATE____ceiba'] = None
+                    else:
+                        raise Exception(e[1])
                 else:
-                    raise Exception('Unexpected CEIBA URL {}'.format(location))
+                    location = get_http_header(headers.getvalue(), b'Location')
+                    if location.startswith('https://ceiba.ntu.edu.tw/login_test.php'):
+                        course['PRIVATE____ceiba'] = parse_qs(
+                            urlparse(location).query)['csn'][0]
+                    elif location.startswith('https://ceiba.ntu.edu.tw/course/'):
+                        course['PRIVATE____ceiba'] = location.split('/')[4]
+                    else:
+                        raise Exception('Unexpected CEIBA URL {}'.format(location))
             else:
                 course['PRIVATE____ceiba'] = None
 
