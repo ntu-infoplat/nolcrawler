@@ -5,6 +5,7 @@ from io import BytesIO
 from lxml import etree
 from urllib.parse import urlencode, urlparse, parse_qs
 import pycurl
+import re
 
 
 class ReadCache:
@@ -126,7 +127,7 @@ class NolCrawler:
                 return etree.tostring(node, encoding='utf-8').decode('utf-8')
 
             def safe_str(x):
-                return x.strip('\xa0')
+                return '' if x is None else x.strip('\xa0')
 
             def safe_int(x):
                 return -1 if safe_str(x) == '' else int(x)
@@ -169,7 +170,13 @@ class NolCrawler:
             course['tea_cname'] = get_link_text(cells[9])
             course['TODO____clsrom'] = raw(cells[11])
             course['sel_code'] = safe_str(cells[8].text)
-            course['TODO____co_gmark'] = raw(cells[13])
+            for text in cells[14].itertext():
+                if text is not None:
+                    co_gmark = re.search('A[1-8]+\**', text)
+                    if co_gmark is not None:
+                        course['co_gmark'] = safe_str(co_gmark.group(0))
+                    else:
+                        course['co_gmark'] = ''
 
             if len(row.xpath('.//img[@src="images/cancel.gif"]')) > 0:
                 course['co_chg'] = '停開'
@@ -178,9 +185,7 @@ class NolCrawler:
             else:
                 course['co_chg'] = ''
 
-            course['TODO____year'] = None
-            course['TODO____comment'] = raw(cells[14])
-            course['TODO____tlec'] = raw(cells[11])
+            course['comment'] = safe_str(cells[14].text)
             course['klass'] = safe_str(cells[3].text)
 
             ceiba_link = get_link(cells[15])
