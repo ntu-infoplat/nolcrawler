@@ -196,7 +196,7 @@ class NolCrawler:
                     if self.curl.getinfo(self.curl.RESPONSE_CODE) == 404:
                         course['PRIVATE____ceiba'] = None
                     else:
-                        raise Exception(e[1])
+                        raise Exception(str(e))
                 else:
                     location = get_http_header(headers.getvalue(), b'Location')
                     if location.startswith('https://ceiba.ntu.edu.tw/login_test.php'):
