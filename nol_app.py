@@ -33,7 +33,16 @@ if __name__ == '__main__':
     for index in range(start_index, count):
         if index % NolCrawler.items_per_page == 0:
             update_progress(index, count)
-        course = crawler.get_course(index)
+        first_error = True
+        while True:
+            try:
+                course = crawler.get_course(index)
+                break
+            except Exception as e:
+                if first_error:
+                    print('', file=stderr)
+                first_error = False
+                print('Error at {}: {}'.format(index, str(e)), file=stderr)
         course.update({'.__index__.': index})
         pprint(course)
     update_progress(count, count)
