@@ -168,7 +168,12 @@ class NolCrawler:
             course['co_select'] = safe_int(cells[10].text)
             course['cou_cname'] = get_link_text(cells[4])
             course['tea_cname'] = get_link_text(cells[9])
-            course['TODO____clsrom'] = raw(cells[11])
+            tea_link = get_link(cells[9])
+            if tea_link:
+                tea_link_parsed = parse_qs(urlparse(tea_link).query)
+                assert tea_link_parsed['op'][0] == 's2'
+                course['PRIVATE____teaid'] = tea_link_parsed['td'][0]
+
             course['sel_code'] = safe_str(cells[8].text)
             for text in cells[14].itertext():
                 if text is not None:
