@@ -174,6 +174,48 @@ class NolCrawler:
                 assert tea_link_parsed['op'][0] == 's2'
                 course['PRIVATE____teaid'] = tea_link_parsed['td'][0]
 
+            def read_time_clsrom(text):
+                text_len = len(text)
+                result = list()
+                state = 0
+                brackets = 0
+                day = time = clsrom = ''
+                for char in text:
+                    if char.isspace():
+                        continue
+                    if state == 0: # day
+                        assert char in '一二三四五六日'
+                        day = char
+                        state += 1
+                    elif state == 1: # time
+                        if char.isalnum() or char == '@':
+                            time += char
+                        elif char == '(':
+                            brackets += 1
+                            state += 1
+                        else:
+                            assert False
+                    elif state == 2: # clsrom
+                        if char == '(':
+                            brackets += 1
+                        elif char == ')':
+                            brackets -= 1
+                        if brackets > 0:
+                            clsrom += char
+                        elif brackets == 0:
+                            result.append((day, time, clsrom))
+                            day = time = clsrom = ''
+                            state = 0
+                        else:
+                            assert False
+                    else:
+                        assert False
+                assert day == '' and time == '' and clsrom == '' and brackets == 0
+                return result
+
+            time_clsrom_text = safe_str(''.join(cells[11].itertext()))
+            course['time_clsrom'] = read_time_clsrom(time_clsrom_text)
+
             course['sel_code'] = safe_str(cells[8].text)
             for text in cells[14].itertext():
                 if text is not None:
