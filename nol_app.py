@@ -3,6 +3,7 @@
 
 from nol_lib import NolCrawler
 from pprint import pprint
+from json import dumps
 from sys import argv, stderr
 
 def update_progress(now, total):
@@ -23,6 +24,7 @@ if __name__ == '__main__':
 
     semester = argv[1] if len(argv) >= 2 else NolCrawler.get_default_semester()
     start_index = int(argv[2]) if len(argv) >= 3 else 0
+    pretty = True if len(argv) >= 4 else False
     crawler = NolCrawler(semester)
     count = NolCrawler.get_course_count(semester)
 
@@ -44,6 +46,9 @@ if __name__ == '__main__':
                 first_error = False
                 print('Error at {}: {}'.format(index, str(e)), file=stderr)
         course.update({'.__index__.': index})
-        pprint(course)
+        if pretty:
+            pprint(course)
+        else:
+            print(dumps(course, ensure_ascii=False))
     update_progress(count, count)
     print('', file=stderr)
