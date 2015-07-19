@@ -113,7 +113,7 @@ class NolCrawler:
     def get_course_count(semester):
         html = NolCrawler.static_request({'current_sem': semester})
         box = html.xpath('//select[@id="select_sem"]')[0]
-        count = box.getnext().getchildren()[0]
+        count = list(box.getnext())[0]
         return int(count.text)
 
     @staticmethod
@@ -132,13 +132,13 @@ class NolCrawler:
                 return -1 if safe_str(x) == '' else int(x)
 
             def get_link(node):
-                children = node.getchildren()
+                children = list(node)
                 if len(children) == 0 or children[0].tag != 'a':
                     return None
                 return children[0].get('href')
 
             def get_link_text(node):
-                children = node.getchildren()
+                children = list(node)
                 if len(children) == 0:
                     return ''
                 elif children[0].tag != 'a':
@@ -150,7 +150,7 @@ class NolCrawler:
                     if header_line.startswith(header_name + b':'):
                         return header_line.split(b':', maxsplit=1)[1].strip().decode('ascii')
 
-            cells = row.getchildren()
+            cells = list(row)
             course = dict()
 
             course['ser_no'] = safe_str(cells[0].text)
