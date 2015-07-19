@@ -278,6 +278,8 @@ class NolCrawler:
             courses = list(map(lambda row: make_course(row), rows))
             return courses
 
+        if index < 0:
+            return None
         courses = self.cache.load(NolCrawler.get_cache_addr(index), get_page, index)
         return courses[index % NolCrawler.items_per_page]
 
