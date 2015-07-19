@@ -61,12 +61,14 @@ class NolCrawler:
         raise Exception('Unsupported TLS implementation')
 
 
-    def __init__(self, semester, cache_size=5):
+    def __init__(self, semester, ceiba=True, debug=False, cache_size=5):
         self.semester = semester
+        self.ceiba = ceiba
         self.cache = ReadCache(cache_size)
         self.curl = pycurl.Curl()
         self.curl.setopt(self.curl.SSLVERSION, NolCrawler.ssl_version)
         self.curl.setopt(self.curl.SSL_CIPHER_LIST, NolCrawler.ssl_cipher)
+        self.curl.setopt(pycurl.VERBOSE, 1 if debug else 0)
         self.parser = etree.HTMLParser(encoding=NolCrawler.doc_encoding)
 
     @staticmethod
@@ -236,7 +238,7 @@ class NolCrawler:
             course['klass'] = safe_str(cells[3].text)
 
             ceiba_link = get_link(cells[15])
-            if ceiba_link:
+            if self.ceiba and ceiba_link:
                 if ceiba_link.startswith('http://'):
                     ceiba_link = ceiba_link.replace('http', 'https', 1)
                 headers = BytesIO()
