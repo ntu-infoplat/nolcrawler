@@ -179,22 +179,40 @@ class NolCrawler:
             def read_time_clsrom(text):
                 text_len = len(text)
                 result = list()
-                state = 0
+                state = 3 # 一開始就有可能出現多餘括號
                 brackets = 0
+                time_list = '01234@56789ABCD'
+                time_dash = False # 可能會有像是 1-@ (等同 1234@) 這種表示法
                 day = time = clsrom = ''
+                unexpected_clsrom = ''
                 for char in text:
                     if char.isspace():
                         continue
+                    if brackets == 0 and state == 3 and char != '(':
+                        state = 0
                     if state == 0: # day
                         assert char in '一二三四五六日'
                         day = char
                         state += 1
                     elif state == 1: # time
-                        if char.isalnum() or char == '@':
-                            time += char
-                        elif char == '(':
+                        if char == ',':
+                            continue
+                        if char == '-':
+                            time_dash = True
+                            continue
+                        if char == '(':
                             brackets += 1
                             state += 1
+                            continue
+                        if char == '＠':
+                            char = '@'
+                        if char in time_list or char in '*密集':
+                            if time_dash:
+                                time_begin = time_list.find(time)
+                                time_end = time_list.find(char) + 1
+                                time = time_list[time_begin:time_end]
+                            else:
+                                time += char
                         else:
                             assert False
                     elif state == 2: # clsrom
@@ -207,16 +225,43 @@ class NolCrawler:
                         elif brackets == 0:
                             result.append((day, time, clsrom))
                             day = time = clsrom = ''
-                            state = 0
+                            state += 1
                         else:
                             assert False
+                    elif state == 3: # 多餘括號裡的資料先保存起來
+                        if char == '(':
+                            if brackets > 0:
+                                unexpected_clsrom += char
+                            brackets += 1
+                        elif char == ')':
+                            brackets -= 1
+                            if brackets > 0:
+                                unexpected_clsrom += char
+                        else:
+                            if brackets > 0:
+                                unexpected_clsrom += char
                     else:
                         assert False
+                # 括號可能沒有配對，這時候我們要直接先送出結果，不經過 assert
+                if clsrom.endswith(')') and brackets > 0:
+                    result.append((day, time, clsrom))
+                    return result
+                # 可能沒有時間，只有教室，我們手動填空直接回傳
+                if day == '' and time == '' and clsrom == '' and \
+                    unexpected_clsrom != '' and len(result) == 0:
+                    result.append(('', '', unexpected_clsrom))
+                    return result
+                # 如果教室全部都是「請洽系所辦」，那就從前面多出來的挖
+                if list(map(lambda r: r[2], result)) == ['請洽系所辦'] * len(result):
+                    if unexpected_clsrom != '':
+                        for i in range(0, len(result)):
+                            result[i] = (result[i][0], result[i][1], unexpected_clsrom)
                 assert day == '' and time == '' and clsrom == '' and brackets == 0
                 return result
 
             time_clsrom_text = safe_str(''.join(cells[11].itertext()))
             course['time_clsrom'] = read_time_clsrom(time_clsrom_text)
+            course['PRIVATE____time_clsrom'] = time_clsrom_text
 
             course['sel_code'] = safe_str(cells[8].text)
             for text in cells[14].itertext():
