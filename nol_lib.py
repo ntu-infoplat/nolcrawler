@@ -234,7 +234,7 @@ class NolCrawler:
             else:
                 course['co_chg'] = ''
 
-            course['comment'] = safe_str(cells[14].text)
+            course['comment'] = safe_str(''.join(cells[14].itertext()))
             course['klass'] = safe_str(cells[3].text)
 
             ceiba_link = get_link(cells[15])
