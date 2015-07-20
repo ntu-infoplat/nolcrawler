@@ -49,6 +49,6 @@ if __name__ == '__main__':
         if pretty:
             pprint(course)
         else:
-            print(dumps(course, ensure_ascii=False))
+            print(dumps(course, ensure_ascii=False, sort_keys=True))
     update_progress(count, count)
     print('', file=stderr)
