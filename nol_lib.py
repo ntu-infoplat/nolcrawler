@@ -277,8 +277,12 @@ class NolCrawler:
             data.seek(0)
             html = etree.parse(data, etree.HTMLParser(encoding=NolCrawler.doc_encoding))
             rows = html.xpath('/html/body/table[4]/tr[position() > 1]')
-            courses = list(map(lambda row: make_course(row), rows))
-            return courses
+            if len(rows) == 0 and len(html.xpath('/html/body/table')) == 0:
+                raise Exception('NOL website down')
+            courses = list(map(make_course, rows))
+            # 有些頁面可能有缺項，但我們還是得補滿到剛好一頁
+            missing_count = NolCrawler.items_per_page - len(courses)
+            return courses + [ {'not_found': True} ] * missing_count
 
         if index < 0:
             return None
