@@ -229,9 +229,13 @@ class NolCrawler:
 
             if len(row.xpath('.//img[@src="images/cancel.gif"]')) > 0:
                 course['co_chg'] = '停開'
+            elif len(row.xpath('.//img[@src="images/add.gif"]')) > 0:
+                course['co_chg'] = '加開'
             elif len(row.xpath('.//img[@src="images/chg.gif"]')) > 0:
                 course['co_chg'] = '異動'
             else:
+                assert len(row.xpath('.//img')) == 0 or \
+                    len(row.xpath('.//img[@src="images/courseweb.gif"]')) > 0
                 course['co_chg'] = ''
 
             course['comment'] = safe_str(''.join(cells[14].itertext()))
