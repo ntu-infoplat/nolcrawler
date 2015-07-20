@@ -175,6 +175,8 @@ class NolCrawler:
                 tea_link_parsed = parse_qs(urlparse(tea_link).query)
                 assert tea_link_parsed['op'][0] == 's2'
                 course['PRIVATE____teaid'] = tea_link_parsed['td'][0]
+            else:
+                course['PRIVATE____teaid'] = None
 
             def read_time_clsrom(text):
                 text_len = len(text)
@@ -270,7 +272,7 @@ class NolCrawler:
                     if co_gmark is not None:
                         course['co_gmark'] = safe_str(co_gmark.group(0))
                     else:
-                        course['co_gmark'] = ''
+                        course['co_gmark'] = None
 
             if len(row.xpath('.//img[@src="images/cancel.gif"]')) > 0:
                 course['co_chg'] = '停開'
@@ -281,7 +283,8 @@ class NolCrawler:
             else:
                 assert len(row.xpath('.//img')) == 0 or \
                     len(row.xpath('.//img[@src="images/courseweb.gif"]')) > 0
-                course['co_chg'] = ''
+                course['co_chg'] = None
+            assert 'co_chg' in course.keys()
 
             course['comment'] = safe_str(''.join(cells[14].itertext()))
             course['klass'] = safe_str(cells[3].text)
@@ -311,6 +314,7 @@ class NolCrawler:
                         raise Exception('Unexpected CEIBA URL {}'.format(location))
             else:
                 course['PRIVATE____ceiba'] = None
+            assert 'PRIVATE____ceiba' in course.keys()
 
             return course
 
