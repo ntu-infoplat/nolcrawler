@@ -208,7 +208,7 @@ class NolCrawler:
                             continue
                         if char == '＠':
                             char = '@'
-                        if char in time_list or char in '*密集':
+                        if char in time_list or char in '*X密集':
                             if time_dash:
                                 time_begin = time_list.find(time)
                                 time_end = time_list.find(char) + 1
