@@ -183,10 +183,17 @@ class NolCrawler:
                 result = list()
                 state = 3 # 一開始就有可能出現多餘括號
                 brackets = 0
-                time_list = '01234@56789ABCD'
+                if int(self.semester.split('-')[0]) >= 104:
+                    is_104_or_later = True
+                    time_list = list('0123456789') + ['10'] + list('ABCD')
+                else:
+                    is_104_or_later = False
+                    time_list = list('01234@56789ABCD')
                 time_dash = False # 可能會有像是 1-@ (等同 1234@) 這種表示法
-                day = time = clsrom = ''
+                day = clsrom = ''
                 unexpected_clsrom = ''
+                time = []
+                uncommitted_time = ''
                 for char in text:
                     if char.isspace():
                         continue
@@ -197,24 +204,64 @@ class NolCrawler:
                         day = char
                         state += 1
                     elif state == 1: # time
-                        if char == ',':
-                            continue
-                        if char == '-':
-                            time_dash = True
-                            continue
-                        if char == '(':
-                            brackets += 1
-                            state += 1
-                            continue
-                        if char in time_list or char in '*X':
-                            if time_dash:
-                                time_begin = time_list.find(time)
-                                time_end = time_list.find(char) + 1
-                                time = time_list[time_begin:time_end]
+                        # 104 學年度以後節課可能出現 10，所以一定都會用逗號分隔
+                        if is_104_or_later:
+                            if char == ',' or char == '(':
+                                assert uncommitted_time in time_list
+                                time.append(uncommitted_time)
+                                uncommitted_time = ''
+                                if char == '(':
+                                    brackets += 1
+                                    state += 1
+                                    continue
                             else:
-                                time += char
+                                uncommitted_time += char
+                        # 104 學年度以前的資料雖也改用逗號分隔，但是常常分得不
+                        # 正確，造成像是 1,-,@、8,9,1,0、9,,,A 這類錯誤。因此
+                        # 我們繼續使用舊的作法，忽略逗號。
                         else:
-                            assert False
+                            if char == ',':
+                                continue
+                            if char == '-':
+                                time_dash = True
+                                assert uncommitted_time == ''
+                                continue
+                            if char == '*':
+                                time.append('*')
+                                assert uncommitted_time == ''
+                                continue
+                            if char == '(':
+                                brackets += 1
+                                state += 1
+                                uncommitted_time = ''
+                                continue
+                            if char in time_list:
+                                if len(time) > 0:
+                                    time_prev = time_list.index(time[-1])
+                                    if uncommitted_time == '':
+                                        time_this = time_list.index(char)
+                                    else:
+                                        # 目前已知會出現兩位數的只有 10
+                                        assert uncommitted_time + char == '10'
+                                        # 重新對應回 A
+                                        time_this = time_list.index('A')
+                                        uncommitted_time = ''
+                                    # 檢查我們是不是遇到兩位數的。不過要注意時
+                                    # 間有可能沒排序，所以我們還是假設只可能出
+                                    # 現 10。
+                                    if time_this <= time_prev and char == '1':
+                                        uncommitted_time += char
+                                    else:
+                                        if time_dash:
+                                            assert len(time) == 1
+                                            time_this += 1
+                                            time = time_list[time_prev:time_this]
+                                        else:
+                                            time.append(time_list[time_this])
+                                else:
+                                    time.append(char)
+                            else:
+                                assert False
                     elif state == 2: # clsrom
                         if char == '(':
                             brackets += 1
@@ -224,7 +271,8 @@ class NolCrawler:
                             clsrom += char
                         elif brackets == 0:
                             result.append((day, time, clsrom))
-                            day = time = clsrom = ''
+                            day = clsrom = ''
+                            time = []
                             state += 1
                         else:
                             assert False
@@ -247,7 +295,7 @@ class NolCrawler:
                     result.append((day, time, clsrom))
                     return result
                 # 可能沒有時間，只有教室，我們手動填空直接回傳
-                if day == '' and time == '' and clsrom == '' and \
+                if day == '' and time == [] and clsrom == '' and \
                     unexpected_clsrom != '' and len(result) == 0:
                     result.append(('', '', unexpected_clsrom))
                     return result
@@ -256,7 +304,7 @@ class NolCrawler:
                     if unexpected_clsrom != '':
                         for i in range(0, len(result)):
                             result[i] = (result[i][0], result[i][1], unexpected_clsrom)
-                assert day == '' and time == '' and clsrom == '' and brackets == 0
+                assert day == '' and time == [] and clsrom == '' and brackets == 0
                 return result
 
             time_clsrom_text = safe_str(''.join(cells[11].itertext()))
