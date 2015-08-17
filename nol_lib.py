@@ -206,9 +206,7 @@ class NolCrawler:
                             brackets += 1
                             state += 1
                             continue
-                        if char == '＠':
-                            char = '@'
-                        if char in time_list or char in '*X密集':
+                        if char in time_list or char in '*X':
                             if time_dash:
                                 time_begin = time_list.find(time)
                                 time_end = time_list.find(char) + 1
