@@ -57,11 +57,14 @@ class NolCrawler:
     # 可是不同的 TLS 函式庫指定方法不太一樣，所以我們自己判斷。
     ssl_library = pycurl.version_info()[5].split('/')[0]
     if ssl_library == 'OpenSSL':
-        ssl_cipher = 'DES-CBC3-SHA'
+        ssl_cipher_nol = 'DES-CBC3-SHA'
+        ssl_cipher_ceiba = 'DHE-RSA-AES128-SHA'
     elif ssl_library == 'GnuTLS':
-        ssl_cipher = 'DES-CBC3-SHA'
+        ssl_cipher_nol = 'DES-CBC3-SHA'
+        ssl_cipher_ceiba = 'DHE-RSA-AES128-SHA'
     elif ssl_library == 'NSS':
-        ssl_cipher = 'rsa_3des_sha'
+        ssl_cipher_nol = 'rsa_3des_sha'
+        ssl_cipher_ceiba = 'dhe_rsa_aes_128_cbc_sha'
     else:
         raise Exception('Unsupported TLS implementation')
 
@@ -72,18 +75,18 @@ class NolCrawler:
         self.cache = ReadCache(cache_size)
         self.curl = pycurl.Curl()
         self.curl.setopt(self.curl.SSLVERSION, NolCrawler.ssl_version)
-        self.curl.setopt(self.curl.SSL_CIPHER_LIST, NolCrawler.ssl_cipher)
         self.curl.setopt(pycurl.VERBOSE, 1 if debug else 0)
         self.parser = etree.HTMLParser(encoding=NolCrawler.doc_encoding)
 
     @staticmethod
-    def request(curl, data, user_args={}, url_override=None, expected_status=200):
+    def request(curl, data, cipher, user_args={}, url_override=None, expected_status=200):
         args = dict(NolCrawler.base_args)
         args.update(user_args)
         if url_override:
             curl.setopt(curl.URL, url_override)
         else:
             curl.setopt(curl.URL, NolCrawler.base_url + '?' + urlencode(args))
+        curl.setopt(curl.SSL_CIPHER_LIST, cipher)
         curl.setopt(curl.WRITEDATA, data)
         curl.perform()
         status = curl.getinfo(curl.RESPONSE_CODE)
@@ -95,10 +98,9 @@ class NolCrawler:
     def static_request(user_args):
         curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, NolCrawler.ssl_version)
-        curl.setopt(curl.SSL_CIPHER_LIST, NolCrawler.ssl_cipher)
         data = BytesIO()
         try:
-            NolCrawler.request(curl, data, user_args)
+            NolCrawler.request(curl, data, NolCrawler.ssl_cipher_nol, user_args)
         finally:
             curl.close()
         data.seek(0)
@@ -348,6 +350,7 @@ class NolCrawler:
                 self.curl.setopt(self.curl.HEADERFUNCTION, headers.write)
                 try:
                     NolCrawler.request(self.curl, BytesIO(),
+                        NolCrawler.ssl_cipher_ceiba,
                         url_override=ceiba_link, expected_status=302)
                 except Exception as e:
                     if self.curl.getinfo(self.curl.RESPONSE_CODE) == 404:
@@ -377,7 +380,7 @@ class NolCrawler:
                 'current_sem': self.semester,
                 'startrec': page_startrec
             }
-            NolCrawler.request(self.curl, data, args)
+            NolCrawler.request(self.curl, data, NolCrawler.ssl_cipher_nol, args)
             data.seek(0)
             html = etree.parse(data, etree.HTMLParser(encoding=NolCrawler.doc_encoding))
             rows = html.xpath('/html/body/table[4]/tr[position() > 1]')
