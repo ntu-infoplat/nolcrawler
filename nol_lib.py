@@ -45,8 +45,13 @@ class NolCrawler:
     items_per_page = 15
 
     # XXX: 臺大課程網有 TLS，但是只支援到 TLSv1.0，所以我們必須手動設定。
-    # 這個常數在 pycurl 中並沒有定義，只能手動去 curl/curl.h 找來用。
-    ssl_version = 4
+    # 這個常數只有在新版的 pycurl 才有定義，所以使用前得先檢查。
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1260408
+    # https://github.com/pycurl/pycurl/commit/83ccaa2
+    if hasattr(pycurl.Curl(), 'SSLVERSION_TLSv1_0'):
+        ssl_version = pycurl.Curl().SSLVERSION_TLSv1_0
+    else:
+        ssl_version = 4
 
     # XXX: 臺大課程網只支援 RC4 和 3DES，不想用 RC4 就得手動指定接受的 cipher。
     # 可是不同的 TLS 函式庫指定方法不太一樣，所以我們自己判斷。
