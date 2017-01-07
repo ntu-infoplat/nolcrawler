@@ -214,9 +214,10 @@ class NolCrawler:
                         # 104 學年度以後節課可能出現 10，所以一定都會用逗號分隔
                         if is_104_or_later:
                             if char == ',' or char == '(':
-                                assert uncommitted_time in time_list
-                                time.append(uncommitted_time)
-                                uncommitted_time = ''
+                                if uncommitted_time != '':
+                                    assert uncommitted_time in time_list
+                                    time.append(uncommitted_time)
+                                    uncommitted_time = ''
                                 if char == '(':
                                     brackets += 1
                                     state += 1
