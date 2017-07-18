@@ -58,13 +58,13 @@ class NolCrawler:
     ssl_library = pycurl.version_info()[5].split('/')[0]
     if ssl_library == 'OpenSSL':
         ssl_cipher_nol = 'DES-CBC3-SHA'
-        ssl_cipher_ceiba = 'DHE-RSA-AES128-SHA'
+        ssl_cipher_ceiba = 'AES128-SHA'
     elif ssl_library == 'GnuTLS':
         ssl_cipher_nol = 'DES-CBC3-SHA'
-        ssl_cipher_ceiba = 'DHE-RSA-AES128-SHA'
+        ssl_cipher_ceiba = 'AES128-SHA'
     elif ssl_library == 'NSS':
         ssl_cipher_nol = 'rsa_3des_sha'
-        ssl_cipher_ceiba = 'dhe_rsa_aes_128_cbc_sha'
+        ssl_cipher_ceiba = 'rsa_aes_128_sha'
     else:
         raise Exception('Unsupported TLS implementation')
 
