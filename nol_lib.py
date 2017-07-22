@@ -139,7 +139,7 @@ class NolCrawler:
                 return '' if x is None else x.strip('\xa0')
 
             def safe_int(x):
-                return -1 if safe_str(x) == '' else int(x)
+                return 0 if safe_str(x) == '' else int(x)
 
             def get_link(node):
                 children = list(node)
