@@ -162,6 +162,7 @@ class NolCrawler:
 
             cells = list(row)
             course = dict()
+            sem_year, sem_index = map(int, self.semester.split('-'))
 
             course['ser_no'] = safe_str(cells[0].text)
             course['PRIVATE____dptname'] = safe_str(cells[1].text)
@@ -173,7 +174,11 @@ class NolCrawler:
                 course['dpt_code'] = None
 
             course['cou_code'] = safe_str(cells[6].text)
-            course['credit'] = safe_int(cells[5].text)
+            if sem_year >= 106 or (sem_year == 105 and sem_index >= 2):
+                course['credit'] = float(cells[5].text)
+            else:
+                course['credit'] = safe_int(cells[5].text)
+
             course['co_select'] = safe_int(cells[10].text)
             course['cou_cname'] = get_link_text(cells[4])
             course['tea_cname'] = get_link_text(cells[9])
@@ -190,7 +195,7 @@ class NolCrawler:
                 result = list()
                 state = 3 # 一開始就有可能出現多餘括號
                 brackets = 0
-                if int(self.semester.split('-')[0]) >= 104:
+                if sem_year >= 104:
                     is_104_or_later = True
                     time_list = list('0123456789') + ['10'] + list('ABCD')
                 else:
