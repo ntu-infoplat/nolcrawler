@@ -191,6 +191,14 @@ class NolCrawler:
                 course['PRIVATE____teaid'] = None
 
             def read_time_clsrom(text):
+                # 開頭如果有第2,3,4,5,6 週之類的東西直接先拿掉
+                if text.startswith('第'):
+                    prefix_begin = 1
+                    prefix_end = text.find('週')
+                    assert prefix_end > prefix_begin
+                    for char in text[prefix_begin:prefix_end]:
+                        assert char in list('0123456789') + [' ', ',']
+                    text = text[prefix_end + 1:]
                 text_len = len(text)
                 result = list()
                 state = 3 # 一開始就有可能出現多餘括號
