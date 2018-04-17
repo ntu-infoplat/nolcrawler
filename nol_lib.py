@@ -173,22 +173,24 @@ class NolCrawler:
             else:
                 course['dpt_code'] = None
 
-            course['cou_code'] = safe_str(cells[6].text)
+            course['cou_code'] = safe_str(cells[7].text)
             if sem_year >= 106 or (sem_year == 105 and sem_index >= 2):
-                course['credit'] = float(cells[5].text)
+                course['credit'] = float(cells[6].text)
             else:
-                course['credit'] = safe_int(cells[5].text)
+                course['credit'] = safe_int(cells[6].text)
 
-            course['co_select'] = safe_int(cells[10].text)
+            course['co_select'] = safe_int(cells[11].text)
             course['cou_cname'] = get_link_text(cells[4])
-            course['tea_cname'] = get_link_text(cells[9])
-            tea_link = get_link(cells[9])
+            course['tea_cname'] = get_link_text(cells[10])
+            tea_link = get_link(cells[10])
             if tea_link:
                 tea_link_parsed = parse_qs(urlparse(tea_link).query)
                 assert tea_link_parsed['op'][0] == 's2'
                 course['PRIVATE____teaid'] = tea_link_parsed['td'][0]
             else:
                 course['PRIVATE____teaid'] = None
+
+            course['PRIVATE____video'] = get_link(cells[5])
 
             def read_time_clsrom(text):
                 # 開頭如果有第2,3,4,5,6 週之類的東西直接先拿掉
@@ -328,11 +330,11 @@ class NolCrawler:
                 assert day == '' and time == [] and clsrom == '' and brackets == 0
                 return result
 
-            time_clsrom_text = safe_str(''.join(cells[11].itertext()))
+            time_clsrom_text = safe_str(''.join(cells[12].itertext()))
             course['time_clsrom'] = read_time_clsrom(time_clsrom_text)
             course['PRIVATE____time_clsrom'] = time_clsrom_text
 
-            course['sel_code'] = safe_str(cells[8].text)
+            course['sel_code'] = safe_str(cells[9].text)
             for text in cells[14].itertext():
                 if text is not None:
                     co_gmark = re.search('A[1-8]+\**', text)
@@ -353,10 +355,10 @@ class NolCrawler:
                 course['co_chg'] = None
             assert 'co_chg' in course.keys()
 
-            course['comment'] = safe_str(''.join(cells[14].itertext()))
+            course['comment'] = safe_str(''.join(cells[15].itertext()))
             course['klass'] = safe_str(cells[3].text)
 
-            ceiba_link = get_link(cells[15])
+            ceiba_link = get_link(cells[16])
             if self.ceiba and ceiba_link:
                 if ceiba_link.startswith('http://'):
                     ceiba_link = ceiba_link.replace('http', 'https', 1)
