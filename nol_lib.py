@@ -369,7 +369,8 @@ class NolCrawler:
                         NolCrawler.ssl_cipher_ceiba,
                         url_override=ceiba_link, expected_status=302)
                 except Exception as e:
-                    if self.curl.getinfo(self.curl.RESPONSE_CODE) == 404:
+                    if self.curl.getinfo(self.curl.RESPONSE_CODE) == 404 or \
+                        self.curl.getinfo(self.curl.RESPONSE_CODE) == 200:
                         course['PRIVATE____ceiba'] = None
                     else:
                         raise Exception(str(e))
